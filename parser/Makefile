@@ -1,8 +1,5 @@
-parse: parse.o scan.o
+parse: parse.cpp scan.cpp
 	g++ -o parse parse.cpp scan.cpp
 
-clean:
-	rm *.o parse
-
-parse.o: scan.hpp
-scan.o: scan.hpp
+parse.cpp: scan.hpp
+scan.cpp: scan.hpp
