@@ -10,8 +10,9 @@
 
 #include "scan.hpp"
 using namespace std;
-const char* names[] = {"read", "write", "id", "literal", "gets",
-                       "add", "sub", "mul", "div", "lparen", "rparen", "eof"};
+const char* names[] = {"read", "write", "if", "fi", "do", "od", "id", "literal",
+"gets", "check", "add", "sub","eq","neq","lthan","gthan","leq","geq","mul", "div",
+"lparen", "rparen", "eof"};
 
 static token input_token;
 
@@ -87,7 +88,7 @@ void stmt_list () {
 void stmt () {
         switch (input_token) {
         case t_id:
-                cout << "predict stmt --> id gets expr\n";
+                cout << "predict stmt --> id gets relation\n";
                 match (t_id);
                 match (t_gets);
                 relation ();
@@ -98,22 +99,25 @@ void stmt () {
                 match (t_id);
                 break;
         case t_write:
-                cout << "predict stmt --> write expr\n";
+                cout << "predict stmt --> write relation\n";
                 match (t_write);
                 relation ();
                 break;
         case t_if:
+                cout << "predict stmt --> if relation stmt_list fi\n";
                 match (t_if);
                 relation();
                 stmt_list();
                 match(t_fi);
                 break;
         case t_do:
+                cout << "predict stmt --> do stmt_list od\n";
                 match (t_do);
                 stmt_list();
                 match (t_do);
                 break;
         case t_check:
+                cout << "predict stmt --> check relation\n";
                 match (t_check);
                 relation();
                 break;
@@ -155,6 +159,7 @@ void expr_tail() {
         case t_gthan:
         case t_leq:
         case t_geq:
+                cout << "predict expr_tail --> rel_op expr\n";
                 rel_op();
                 expr();
                 break;
@@ -167,7 +172,7 @@ void expr_tail() {
         case t_check:
         case t_eof:
         case t_rparen:
-                cout << "predict term_tail --> epsilon\n";
+                cout << "predict expr_tail --> epsilon\n";
                 break; /*  epsilon production */
         }
 }

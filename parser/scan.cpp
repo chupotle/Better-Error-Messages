@@ -24,7 +24,7 @@ token scan() {
                         c = getchar();
                 } while (isalpha(c) || isdigit(c) || c == '_');
                 //token_image[i] = '\0';
-                cout << "WOWOW" << token_image << "WOWOW";
+                //cout << "WOWOW" << token_image << "WOWOW";
                 if (token_image == "read") return t_read;
                 else if (token_image == "write") return t_write;
                 else if (token_image == "if") return t_if;
