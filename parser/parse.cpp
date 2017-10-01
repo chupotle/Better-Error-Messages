@@ -8,7 +8,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 
-#include "scan.h"
+#include "scan.hpp"
 
 const char* names[] = {"read", "write", "id", "literal", "gets",
                        "add", "sub", "mul", "div", "lparen", "rparen", "eof"};

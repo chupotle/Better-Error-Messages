@@ -7,7 +7,7 @@
 #include "string.h"
 #include "ctype.h"
 
-#include "scan.h"
+#include "scan.hpp"
 
 char token_image[100];
 
