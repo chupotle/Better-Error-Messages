@@ -10,9 +10,10 @@
 
 #include "scan.hpp"
 using namespace std;
-const char* names[] = {"read", "write", "if", "fi", "do", "od", "id", "literal",
-"gets", "check", "add", "sub","eq","neq","lthan","gthan","leq","geq","mul", "div",
-"lparen", "rparen", "eof"};
+const char* names[] = {"read", "write","if", "fi", "do", "od", "check","id", "literal", "gets", "ro", "leq","geq", "eq","neq","lthan","gthan","add", "sub", "mul", "div", "lparen", "rparen", "eof"};
+// const char* names[] = {"read", "write","id", "literal",
+//                        "gets", "if", "fi", "do", "od", "check", "ro","eq","neq","lthan","gthan","leq","geq", "add", "sub","mul", "div",
+//                        "lparen", "rparen", "eof"};
 
 static token input_token;
 
@@ -38,8 +39,8 @@ void stmt ();
 void relation();
 void expr ();
 void expr_tail ();
-void term_tail ();
 void term ();
+void term_tail ();
 void factor_tail ();
 void factor ();
 void rel_op();
@@ -163,6 +164,7 @@ void expr_tail() {
                 rel_op();
                 expr();
                 break;
+        case t_id;
         case t_read:
         case t_write:
         case t_if:
@@ -174,6 +176,7 @@ void expr_tail() {
         case t_rparen:
                 cout << "predict expr_tail --> epsilon\n";
                 break; /*  epsilon production */
+        default: error ();
         }
 }
 
