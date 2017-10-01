@@ -2,13 +2,10 @@
     Michael L. Scott, 2008-2017.
 */
 
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
-#include "ctype.h"
 
+#include <iostream>
 #include "scan.hpp"
-
+using namespace std;
 char token_image[100];
 
 token scan() {
@@ -28,8 +25,8 @@ token scan() {
             c = getchar();
         } while (isalpha(c) || isdigit(c) || c == '_');
         token_image[i] = '\0';
-        if (!strcmp(token_image, "read")) return t_read;
-        else if (!strcmp(token_image, "write")) return t_write;
+        if (token_image == "read") return t_read;
+        else if (token_image == "write") return t_write;
         else return t_id;
     }
     else if (isdigit(c)) {
@@ -56,7 +53,7 @@ token scan() {
         case '(': c = getchar(); return t_lparen;
         case ')': c = getchar(); return t_rparen;
         default:
-            printf("error\n");
+            cout << "error\n";
             exit(1);
     }
 }
