@@ -6,13 +6,12 @@
 #include <iostream>
 #include "scan.hpp"
 using namespace std;
-char token_image[100];
-
+std::string token_image;
 token scan() {
         static int c = ' ';
         /* next available char; extra (int) width accommodates EOF */
         int i = 0;          /* index into token_image */
-
+        token_image = "";
         /* skip white space */
         while (isspace(c)) {
                 c = getchar();
@@ -21,10 +20,11 @@ token scan() {
                 return t_eof;
         if (isalpha(c)) {
                 do {
-                        token_image[i++] = c;
+                        token_image+= c;
                         c = getchar();
                 } while (isalpha(c) || isdigit(c) || c == '_');
-                token_image[i] = '\0';
+                //token_image[i] = '\0';
+                cout << "WOWOW" << token_image << "WOWOW";
                 if (token_image == "read") return t_read;
                 else if (token_image == "write") return t_write;
                 else if (token_image == "if") return t_if;
@@ -80,6 +80,16 @@ token scan() {
                                 return t_gthan;
                         }
                         break;
+                case '$':
+                        if ((c = getchar()) != '$') {
+                                fprintf(stderr, "error\n");
+                                exit(1);
+                        } else {
+                                c = getchar();
+                                return t_eof;
+                        }
+                        break;
+
                 case '+': c = getchar(); return t_add;
                 case '-': c = getchar(); return t_sub;
                 case '*': c = getchar(); return t_mul;

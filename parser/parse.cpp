@@ -50,6 +50,9 @@ void program () {
         case t_id:
         case t_read:
         case t_write:
+        case t_if:
+        case t_do:
+        case t_check:
         case t_eof:
                 cout << "predict program --> stmt_list eof\n";
                 stmt_list ();
@@ -64,9 +67,15 @@ void stmt_list () {
         case t_id:
         case t_read:
         case t_write:
+        case t_if:
+        case t_do:
+        case t_check:
                 cout << "predict stmt_list --> stmt stmt_list\n";
                 stmt ();
                 stmt_list ();
+                break;
+        case t_fi:
+        case t_od:
                 break;
         case t_eof:
                 cout << "predict stmt_list --> epsilon\n";
