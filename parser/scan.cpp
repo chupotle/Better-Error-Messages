@@ -53,10 +53,13 @@ token scan() {
                         break;
 
                 case '=':
+
                         if ((c = getchar()) != '=') {
+
                                 fprintf(stderr, "error\n");
                                 exit(1);
                         } else {
+                                        
                                 c = getchar();
                                 return t_eq;
                         }

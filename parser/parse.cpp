@@ -10,9 +10,9 @@
 
 #include "scan.hpp"
 using namespace std;
-const char* names[] = {"read", "write", "if", "fi", "do", "od", "id", "literal",
-"gets", "check", "add", "sub","eq","neq","lthan","gthan","leq","geq","mul", "div",
-"lparen", "rparen", "eof"};
+const char* names[] = {"read", "write","id", "literal",
+                       "gets", "if", "fi", "do", "od", "check", "ro","eq","neq","lthan","gthan","leq","geq", "add", "sub","mul", "div",
+                       "lparen", "rparen", "eof"};
 
 static token input_token;
 
@@ -114,7 +114,7 @@ void stmt () {
                 cout << "predict stmt --> do stmt_list od\n";
                 match (t_do);
                 stmt_list();
-                match (t_do);
+                match (t_od);
                 break;
         case t_check:
                 cout << "predict stmt --> check relation\n";
@@ -186,10 +186,22 @@ void term_tail () {
                 term ();
                 term_tail ();
                 break;
-        case t_rparen:
+
         case t_id:
         case t_read:
         case t_write:
+        case t_if:
+        case t_fi:
+        case t_do:
+        case t_od:
+        case t_check:
+        case t_eq:
+        case t_neq:
+        case t_lthan:
+        case t_gthan:
+        case t_leq:
+        case t_geq:
+        case t_rparen:
         case t_eof:
                 cout << "predict term_tail --> epsilon\n";
                 break;      /*  epsilon production */
@@ -226,6 +238,17 @@ void factor_tail () {
         case t_read:
         case t_write:
         case t_eof:
+        case t_if:
+        case t_fi:
+        case t_do:
+        case t_od:
+        case t_check:
+        case t_eq:
+        case t_neq:
+        case t_lthan:
+        case t_gthan:
+        case t_leq:
+        case t_geq:
                 cout << "predict factor_tail --> epsilon\n";
                 break;      /*  epsilon production */
         default: error ();
@@ -243,9 +266,9 @@ void factor () {
                 match (t_literal);
                 break;
         case t_lparen:
-                cout << "predict factor --> lparen expr rparen\n";
+                cout << "predict factor --> lparen relation rparen\n";
                 match (t_lparen);
-                expr ();
+                relation ();
                 match (t_rparen);
                 break;
         default: error ();
