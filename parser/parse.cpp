@@ -11,7 +11,7 @@
 #include "scan.hpp"
 using namespace std;
 
-        const char* names[] = {"read", "write","if", "fi", "do", "od", "check","id", "literal", "gets", "ro", "leq","geq", "eq","neq","lthan","gthan","add", "sub", "mul", "div", "lparen", "rparen", "eof"};
+const char* names[] = {"read", "write","if", "fi", "do", "od", "check","id", "literal", "gets", "ro", "leq","geq", "eq","neq","lthan","gthan","add", "sub", "mul", "div", "lparen", "rparen", "eof"};
 
 
 static token input_token;
@@ -137,7 +137,9 @@ void stmt () {
                         }
                         else
                         {
+                          cout<<"1"<<input_token;
                                 input_token = scan();
+                                cout<<input_token<<"2";
                         }
                 }
 
@@ -153,7 +155,27 @@ void relation() {
                 expr ();
                 expr_tail ();
                 break;
-        default: error ();
+        default:
+                while (true)
+                {
+                        if (input_token == t_lparen ||  input_token == t_id|| input_token == t_literal)
+                        {
+                                cout<< "oops3";
+                                relation();
+                                break;
+                        }
+                        else if (input_token == t_fi || input_token == t_od || input_token == t_eof|| input_token == t_rparen)
+                        {
+                                cout << "oops4";
+                                break;
+                        }
+                        else
+                        {
+                          cout<<"1"<<input_token;
+                                input_token = scan();
+                                cout<<input_token<<"2";
+                        }
+                }
         }
 }
 
@@ -166,7 +188,27 @@ void expr () {
                 term ();
                 term_tail ();
                 break;
-        default: error ();
+        default:
+                while (true)
+                {
+                        if (input_token == t_lparen ||  input_token == t_id|| input_token == t_literal)
+                        {
+                                cout<< "oop5";
+                                expr();
+                                break;
+                        }
+                        else if (input_token == t_eq || input_token == t_neq || input_token == t_lthan|| input_token == t_gthan|| input_token == t_leq|| input_token == t_geq|| input_token == t_fi|| input_token == t_od|| input_token == t_rparen|| input_token == t_eof)
+                        {
+                                cout << "oops6";
+                                break;
+                        }
+                        else
+                        {
+                          cout<<"1"<<input_token;
+                                input_token = scan();
+                                cout<<input_token<<"2";
+                        }
+                }
         }
 }
 
