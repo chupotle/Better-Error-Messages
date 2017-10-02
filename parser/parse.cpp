@@ -13,8 +13,16 @@ using namespace std;
 
 const char* names[] = {"read", "write","if", "fi", "do", "od", "check","id", "literal", "gets", "ro", "leq","geq", "eq","neq","lthan","gthan","add", "sub", "mul", "div", "lparen", "rparen", "eof"};
 
-
 static token input_token;
+static string prev_token;
+
+struct Node {
+        string value;
+        Node* parent;
+        Node* child[4];
+};
+
+Node* treeRoot = new Node;
 
 void error () {
         //cout<< ("syntax error\n");
@@ -27,26 +35,29 @@ void match (token expected) {
                 if (input_token == t_id || input_token == t_literal)
                         cout << "";
                 //cout << "\n";
+                prev_token=token_image;
                 input_token = scan ();
         }
         else error ();
 }
 
-void program ();
-void stmt_list ();
-void stmt ();
-void relation();
-void expr ();
-void expr_tail ();
-void term ();
-void term_tail ();
-void factor_tail ();
-void factor ();
-void rel_op();
-void add_op ();
-void mul_op ();
+Node* program ();
+Node* stmt_list ();
+Node* stmt ();
+Node* relation();
+Node* expr ();
+Node* expr_tail ();
+Node* term ();
+Node* term_tail ();
+Node* factor_tail ();
+Node* factor ();
+string rel_op();
+string add_op ();
+string mul_op ();
+void printTree(Node*);
 
-void program () {
+Node* program () {
+        Node* gen = new Node;
         switch (input_token) {
         case t_id:
         case t_read:
@@ -56,9 +67,9 @@ void program () {
         case t_check:
         case t_eof:
                 //cout << "predict program --> stmt_list eof\n";
-                stmt_list ();
+                gen = stmt_list ();
                 match (t_eof);
-                break;
+                return gen;
         default:
                 while (true)
                 {
@@ -77,7 +88,8 @@ void program () {
         }
 }
 
-void stmt_list () {
+Node* stmt_list () {
+        Node* gen = new Node;
         switch (input_token) {
         case t_id:
         case t_read:
@@ -86,15 +98,15 @@ void stmt_list () {
         case t_do:
         case t_check:
                 //cout << "predict stmt_list --> stmt stmt_list\n";
-                stmt ();
-                stmt_list ();
-                break;
+                gen = stmt ();
+                gen->child[3] = stmt_list ();
+                return gen;
         case t_fi:
         case t_od:
-                break;
+                return NULL;
         case t_eof:
                 //cout << "predict stmt_list --> epsilon\n";
-                break;      /*  epsilon production */
+                return NULL;      /*  epsilon production */
         default:
                 while (true)
                 {
@@ -114,45 +126,63 @@ void stmt_list () {
                                 input_token = scan();
                         }
                 }
+                return NULL;
         }
 }
 
-void stmt () {
+Node* stmt () {
+        string val = "";
+        Node* gen = new Node;
+        Node* rChild = new Node;
+        Node* temp = new Node;
         switch (input_token) {
         case t_id:
                 //cout << "predict stmt --> id gets relation\n";
                 match (t_id);
                 match (t_gets);
-                relation ();
-                break;
+                val = prev_token;
+                rChild = relation ();
+                temp->value = val;
+                gen->value = ":=";
+                gen->child[1]=rChild;
+                gen->child[0]=temp;
+                return gen;
         case t_read:
                 //cout << "predict stmt --> read id\n";
                 match (t_read);
                 match (t_id);
-                break;
+                temp->value = prev_token;
+                gen->value = "read";
+                gen->child[0]=temp;
+                return gen;
         case t_write:
                 //cout << "predict stmt --> write relation\n";
                 match (t_write);
-                relation ();
-                break;
+                gen->value = "read";
+                gen->child[0] = relation ();
+                return gen;
         case t_if:
                 //cout << "predict stmt --> if relation stmt_list fi\n";
                 match (t_if);
-                relation();
-                stmt_list();
+                gen->value = "if";
+                gen->child[0] = relation();
+                gen->child[1] = stmt_list();
                 match(t_fi);
-                break;
+                return gen;
         case t_do:
                 //cout << "predict stmt --> do stmt_list od\n";
                 match (t_do);
-                stmt_list();
+                gen->value = "while";
+                gen->child[0] = relation();
+                gen->child[1] = stmt_list();
                 match (t_od);
-                break;
+                return gen;
         case t_check:
                 //cout << "predict stmt --> check relation\n";
                 match (t_check);
-                relation();
-                break;
+                  gen->value = "check";
+                  gen->child[0] = relation();
+                  return gen;
         default:
                 while (true)
                 {
@@ -172,19 +202,28 @@ void stmt () {
                                 input_token = scan();
                         }
                 }
-
+                return NULL;
         }
 }
 
-void relation() {
+Node* relation() {
+        Node* gen = new Node;
+        Node* rChild = new Node;
+        Node* lChild = new Node;
+        string val="";
         switch (input_token) {
         case t_id:
         case t_literal:
         case t_lparen:
                 //cout << "predict relation --> expr expr_tail\n";
-                expr ();
-                expr_tail ();
-                break;
+                lChild = expr ();
+                rChild = expr_tail ();
+                if(rChild != NULL){
+                  rChild->child[0] = lChild;
+                  return rChild;
+                }
+                else
+                  return lChild;
         default:
                 while (true)
                 {
@@ -204,18 +243,28 @@ void relation() {
                                 input_token = scan();
                         }
                 }
+                return NULL;
         }
 }
 
-void expr () {
+Node* expr () {
+        Node* gen = new Node;
+        Node* rChild = new Node;
+        Node* lChild = new Node;
+        string val="";
         switch (input_token) {
         case t_id:
         case t_literal:
         case t_lparen:
                 //cout << "predict expr --> term term_tail\n";
-                term ();
-                term_tail ();
-                break;
+                lChild = term ();
+                rChild = term_tail ();
+                if(rChild != NULL){
+                  rChild->child[0] = lChild;
+                  return rChild;
+                }
+                else
+                  return lChild;
         default:
                 while (true)
                 {
@@ -235,10 +284,15 @@ void expr () {
                                 input_token = scan();
                         }
                 }
+                return NULL;
         }
 }
 
-void expr_tail() {
+Node* expr_tail() {
+        Node* gen = new Node;
+        Node* rChild = new Node;
+        Node* lChild = new Node;
+        string val="";
         switch (input_token) {
         case t_eq:
         case t_neq:
@@ -247,9 +301,11 @@ void expr_tail() {
         case t_leq:
         case t_geq:
                 //cout << "predict expr_tail --> rel_op expr\n";
-                rel_op();
-                expr();
-                break;
+                val = rel_op();
+                lChild = expr();
+                gen->value = val;
+                gen->child[0]=lChild;
+                return gen;
         case t_id:
         case t_read:
         case t_write:
@@ -261,7 +317,7 @@ void expr_tail() {
         case t_eof:
         case t_rparen:
                 //cout << "predict expr_tail --> epsilon\n";
-                break; /*  epsilon production */
+                return NULL; /*  epsilon production */
         default:  while (true)
                 {
                         if (input_token == t_eq ||  input_token == t_neq|| input_token == t_lthan|| input_token == t_gthan|| input_token == t_leq|| input_token == t_geq|| input_token == t_rparen||input_token == t_id || input_token == t_read|| input_token == t_write|| input_token == t_if|| input_token == t_do|| input_token == t_check|| input_token == t_eof)
@@ -280,19 +336,28 @@ void expr_tail() {
                                 input_token = scan();
                         }
                 }
+                return NULL;
         }
 }
 
-void term_tail () {
+Node* term_tail () {
+        Node* gen = new Node;
+        Node* rChild = new Node;
+        Node* lChild = new Node;
+        string val="";
         switch (input_token) {
         case t_add:
         case t_sub:
                 //cout << "predict term_tail --> add_op term term_tail\n";
-                add_op ();
-                term ();
-                term_tail ();
-                break;
-
+                val = add_op ();
+                lChild = term ();
+                rChild = term_tail ();
+                gen->value = val;
+                if(lChild != NULL)
+                        gen->child[0]=lChild;
+                if(rChild != NULL)
+                        gen->child[1]=rChild;
+                return gen;
         case t_id:
         case t_read:
         case t_write:
@@ -310,7 +375,7 @@ void term_tail () {
         case t_rparen:
         case t_eof:
                 //cout << "predict term_tail --> epsilon\n";
-                break;      /*  epsilon production */
+                return NULL;       /*  epsilon production */
         default:   while (true)
                 {
                         if (input_token == t_add || input_token == t_sub || input_token == t_eq ||  input_token == t_neq|| input_token == t_lthan|| input_token == t_gthan|| input_token == t_leq|| input_token == t_geq|| input_token == t_rparen||input_token == t_id || input_token == t_read|| input_token == t_write|| input_token == t_if|| input_token == t_do|| input_token == t_check|| input_token == t_eof)
@@ -329,18 +394,25 @@ void term_tail () {
                                 input_token = scan();
                         }
                 }
+                return NULL;
         }
 }
 
-void term () {
+Node* term () {
+        Node* lChild = new Node;
+        Node* rChild = new Node;
         switch (input_token) {
         case t_id:
         case t_literal:
         case t_lparen:
                 //cout << "predict term --> factor factor_tail\n";
-                factor ();
-                factor_tail ();
-                break;
+                lChild = factor ();
+                rChild = factor_tail ();
+                if(rChild != NULL){
+                  rChild->child[0]=lChild;
+                  return rChild;
+                }
+                return lChild;
         default:   while (true)
                 {
                         if ( input_token == t_lparen||input_token == t_id || input_token == t_literal)
@@ -359,18 +431,28 @@ void term () {
                                 input_token = scan();
                         }
                 }
+                return NULL;
         }
 }
 
-void factor_tail () {
+Node* factor_tail () {
+        Node* gen = new Node;
+        Node* rChild = new Node;
+        Node* lChild = new Node;
+        string val="";
         switch (input_token) {
         case t_mul:
         case t_div:
                 //cout << "predict factor_tail --> mul_op factor factor_tail\n";
-                mul_op ();
-                factor ();
-                factor_tail ();
-                break;
+                val = mul_op ();
+                lChild = factor ();
+                rChild = factor_tail ();
+                gen->value = val;
+                if(lChild != NULL)
+                        gen->child[0]=lChild;
+                if(rChild != NULL)
+                        gen->child[1]=rChild;
+                return gen;
         case t_add:
         case t_sub:
         case t_rparen:
@@ -390,7 +472,7 @@ void factor_tail () {
         case t_leq:
         case t_geq:
                 //cout << "predict factor_tail --> epsilon\n";
-                break;      /*  epsilon production */
+                return NULL;       /*  epsilon production */
         default: while (true)
                 {
                         if (input_token == t_add || input_token == t_sub || input_token == t_mul || input_token == t_div|| input_token == t_eq ||  input_token == t_neq|| input_token == t_lthan|| input_token == t_gthan|| input_token == t_leq|| input_token == t_geq|| input_token == t_rparen||input_token == t_id || input_token == t_read|| input_token == t_write|| input_token == t_if|| input_token == t_do|| input_token == t_check|| input_token == t_eof)
@@ -409,25 +491,29 @@ void factor_tail () {
                                 input_token = scan();
                         }
                 }
+                return NULL;
         }
 }
 
-void factor () {
+Node* factor () {
+        Node* gen = new Node;
         switch (input_token) {
         case t_id:
                 //cout << "predict factor --> id\n";
                 match (t_id);
-                break;
+                gen->value = prev_token;
+                return gen;
         case t_literal:
                 //cout << "predict factor --> literal\n";
                 match (t_literal);
-                break;
+                    gen->value = prev_token;
+                    return gen;
         case t_lparen:
                 //cout << "predict factor --> lparen relation rparen\n";
                 match (t_lparen);
-                relation ();
+                gen = relation ();
                 match (t_rparen);
-                break;
+                return gen;
         default: while (true)
                 {
                         if (input_token == t_lparen ||  input_token == t_id|| input_token == t_literal)
@@ -449,32 +535,32 @@ void factor () {
         }
 }
 
-void rel_op() {
+string rel_op() {
         switch (input_token) {
         case t_eq:
                 //cout << "predict rel_op --> eq\n";
                 match (t_eq);
-                break;
+                return "==";
         case t_neq:
                 //cout << "predict rel_op --> neq\n";
                 match (t_neq);
-                break;
+                return "!=";
         case t_lthan:
                 //cout << "predict rel_op --> lthan\n";
                 match (t_lthan);
-                break;
+                return "<";
         case t_gthan:
                 //cout << "predict rel_op --> gthan\n";
                 match (t_gthan);
-                break;
+                return ">";
         case t_leq:
                 //cout << "predict rel_op --> leq\n";
                 match (t_leq);
-                break;
+                return "<=";
         case t_geq:
                 //cout << "predict rel_op --> geq\n";
                 match (t_geq);
-                break;
+                return ">=";
         default: while (true)
                 {
                         if (input_token == t_eq ||  input_token == t_neq|| input_token == t_lthan|| input_token == t_gthan|| input_token == t_leq|| input_token == t_geq)
@@ -488,19 +574,20 @@ void rel_op() {
                                 input_token = scan();
                         }
                 }
+                return NULL;
         }
 }
 
-void add_op () {
+string add_op () {
         switch (input_token) {
         case t_add:
                 //cout << "predict add_op --> add\n";
                 match (t_add);
-                break;
+                return "+";
         case t_sub:
                 //cout << "predict add_op --> sub\n";
                 match (t_sub);
-                break;
+                return "-";
         default:while (true)
                 {
                         if (input_token == t_add| input_token == t_sub)
@@ -514,19 +601,20 @@ void add_op () {
                                 input_token = scan();
                         }
                 }
+                return NULL;
         }
 }
 
-void mul_op () {
+string mul_op () {
         switch (input_token) {
         case t_mul:
                 //cout << "predict mul_op --> mul\n";
                 match (t_mul);
-                break;
+                return "*";
         case t_div:
                 //cout << "predict mul_op --> div\n";
                 match (t_div);
-                break;
+                return "/";
         default: while (true)
                 {
                         if (input_token == t_mul| input_token == t_div)
@@ -540,11 +628,33 @@ void mul_op () {
                                 input_token = scan();
                         }
                 }
+                return NULL;
         }
 }
+void printTree(Node* root){
+    if(root == NULL){
+        return;
+    }else{
+        if(root->child[0] != NULL
+            || root->child[1] != NULL
+            || root->child[2] != NULL
+            || root->child[3] != NULL){
 
+            cout << "( " << root->value << " ";
+            printTree(root->child[0]);
+            printTree(root->child[1]);
+            printTree(root->child[2]);
+            printTree(root->child[3]);
+            cout << ") ";
+        }
+        else{
+            cout << " " << root->value << " ";
+        }
+    }
+}
 int main () {
         input_token = scan ();
-        program ();
+        Node* outputTree = program ();
+        printTree(outputTree);
         return 0;
 }

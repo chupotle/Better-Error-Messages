@@ -1,0 +1,514 @@
+/* Complete recursive descent parser for the calculator language.
+    Builds on figure 2.16.  Prints a trace of productions predicted and
+    tokens matched.  Does no error recovery: prints "syntax error" and
+    dies on invalid input.
+    Michael L. Scott, 2008-2017.
+ */
+
+
+#include <iostream>
+
+#include "scan.hpp"
+using namespace std;
+
+const char* names[] = {"read", "write","if", "fi", "do", "od", "check","id", "literal", "gets", "ro", "leq","geq", "eq","neq","lthan","gthan","add", "sub", "mul", "div", "lparen", "rparen", "eof"};
+const char* symbols[] = {"read", "write","if", "fi", "do", "od", "check","id", "literal", "gets", "ro", "leq","geq", "eq","neq","lthan","gthan","add", "sub", "mul", "div", "lparen", "rparen", "eof"};
+
+static token input_token;
+static string prev_token;
+
+struct Node {
+        string value;
+        Node* parent;
+        Node* child[4];
+};
+
+Node* treeRoot = new Node;
+
+void error () {
+        cout<< ("syntax error\n");
+        exit (1);
+}
+
+void match (token expected) {
+        std::cout << names[input_token];
+        if (input_token == expected) {
+                cout << "matched " << names[input_token];
+                if (input_token == t_id || input_token == t_literal)
+                        cout << ": " << token_image;
+                cout << "\n";
+                prev_token=token_image;
+                input_token = scan ();
+        }
+        else error ();
+}
+
+Node* program ();
+Node* stmt_list ();
+Node* stmt ();
+Node* relation();
+Node* expr ();
+Node* expr_tail ();
+Node* term ();
+Node* term_tail ();
+Node* factor_tail ();
+Node* factor ();
+string rel_op();
+string add_op ();
+string mul_op ();
+void printTree(Node* rooot);
+
+Node* program () {
+        Node* gen = new Node;
+        switch (input_token) {
+        case t_id:
+        case t_read:
+        case t_write:
+        case t_if:
+        case t_do:
+        case t_check:
+        case t_eof:
+                cout << "predict program --> stmt_list eof\n";
+
+                gen = stmt_list ();
+                match (t_eof);
+                return gen;
+        default: error ();
+        }
+}
+
+Node* stmt_list () {
+        Node* gen = new Node;
+        switch (input_token) {
+        case t_id:
+        case t_read:
+        case t_write:
+        case t_if:
+        case t_do:
+        case t_check:
+                cout << "predict stmt_list --> stmt stmt_list\n";
+                gen = stmt ();
+                gen->child[3] = stmt_list ();
+                return gen;
+        case t_fi:
+        case t_od:
+                return NULL;
+        case t_eof:
+                cout << "predict stmt_list --> epsilon\n";
+                return NULL;      /*  epsilon production */
+        default: error ();
+        }
+}
+
+Node* stmt () {
+        Node* gen = new Node;
+        Node* rChild = new Node;
+        Node* temp = new Node;
+        switch (input_token) {
+        case t_id:
+                cout << "predict stmt --> id gets relation\n";
+                match (t_id);
+                match (t_gets);
+                temp->value = prev_token;
+                rChild = relation ();
+                gen->value = ":=";
+                gen->child[1]=rChild;
+                gen->child[0]=temp;
+                return gen;
+        case t_read:
+                cout << "predict stmt --> read id\n";
+                match (t_read);
+                match (t_id);
+                temp->value = prev_token;
+                gen->value = "read";
+                gen->child[0]=temp;
+                return gen;
+        case t_write:
+                cout << "predict stmt --> write relation\n";
+                match (t_write);
+                gen->value = "read";
+                gen->child[0] = relation ();
+                return gen;
+        case t_if:
+                cout << "predict stmt --> if relation stmt_list fi\n";
+                match (t_if);
+                gen->value = "if";
+                gen->child[0] = relation();
+                gen->child[1] = stmt_list();
+                match(t_fi);
+                return gen;
+        case t_do:
+                cout << "predict stmt --> do stmt_list od\n";
+                match (t_do);
+                gen->value = "while";
+                gen->child[0] = relation();
+                gen->child[1] = stmt_list();
+                match (t_od);
+                return gen;
+        case t_check:
+                cout << "predict stmt --> check relation\n";
+                match (t_check);
+                gen->value = "check";
+                gen->child[0] = relation();
+                return gen;
+        default:
+                while (true)
+                {
+                        if (input_token == t_id || input_token == t_read|| input_token == t_write|| input_token == t_if|| input_token == t_do|| input_token == t_check)
+                        {
+                                cout<< "oops";
+                                stmt();
+                                break;
+                        }
+                        else if (input_token == t_fi || input_token == t_od || input_token == t_eof)
+                        {
+                                cout << "oops2";
+                                break;
+                        }
+                        else
+                        {
+                          cout<<"1"<<input_token;
+                                input_token = scan();
+                                cout<<input_token<<"2";
+                        }
+                }
+                return NULL;
+        }
+}
+
+Node* relation() {
+        Node* gen = new Node;
+        Node* rChild = new Node;
+        Node* lChild = new Node;
+        string val="";
+        switch (input_token) {
+        case t_id:
+        case t_literal:
+        case t_lparen:
+                cout << "predict relation --> expr expr_tail\n";
+                lChild = expr ();
+                rChild = expr_tail ();
+                if(rChild != NULL){
+                  rChild->child[0] = lChild;
+                  return rChild;
+                }
+                else
+                  return lChild;
+        default:
+                while (true)
+                {
+                        if (input_token == t_lparen ||  input_token == t_id|| input_token == t_literal)
+                        {
+                                cout<< "oops3";
+                                relation();
+                                break;
+                        }
+                        else if (input_token == t_fi || input_token == t_od || input_token == t_eof|| input_token == t_rparen)
+                        {
+                                cout << "oops4";
+                                break;
+                        }
+                        else
+                        {
+                          cout<<"1"<<input_token;
+                                input_token = scan();
+                                cout<<input_token<<"2";
+                        }
+                }
+                return NULL;
+        }
+}
+
+Node* expr () {
+        Node* gen = new Node;
+        Node* rChild = new Node;
+        Node* lChild = new Node;
+        string val="";
+        switch (input_token) {
+        case t_id:
+        case t_literal:
+        case t_lparen:
+                cout << "predict expr --> term term_tail\n";
+                lChild = term ();
+                rChild = term_tail ();
+                if(rChild != NULL){
+                  rChild->child[0] = lChild;
+                  return rChild;
+                }
+                else
+                  return lChild;
+        default:
+                while (true)
+                {
+                        if (input_token == t_lparen ||  input_token == t_id|| input_token == t_literal)
+                        {
+                                cout<< "oop5";
+                                expr();
+                                break;
+                        }
+                        else if (input_token == t_eq || input_token == t_neq || input_token == t_lthan|| input_token == t_gthan|| input_token == t_leq|| input_token == t_geq|| input_token == t_fi|| input_token == t_od|| input_token == t_rparen|| input_token == t_eof)
+                        {
+                                cout << "oops6";
+                                break;
+                        }
+                        else
+                        {
+                          cout<<"1"<<input_token;
+                                input_token = scan();
+                                cout<<input_token<<"2";
+                        }
+                }
+                return NULL;
+        }
+}
+
+Node* expr_tail() {
+        Node* gen = new Node;
+        Node* rChild = new Node;
+        Node* lChild = new Node;
+        string val="";
+        switch (input_token) {
+        case t_eq:
+        case t_neq:
+        case t_lthan:
+        case t_gthan:
+        case t_leq:
+        case t_geq:
+                cout << "predict expr_tail --> rel_op expr\n";
+                val = rel_op();
+                lChild = expr();
+                gen->value = val;
+                gen->child[0]=lChild;
+                return gen;
+        case t_id:
+        case t_read:
+        case t_write:
+        case t_if:
+        case t_fi:
+        case t_do:
+        case t_od:
+        case t_check:
+        case t_eof:
+        case t_rparen:
+                cout << "predict expr_tail --> epsilon\n";
+                return NULL; /*  epsilon production */
+        default:
+                return NULL;
+        }
+}
+
+Node* term_tail () {
+        Node* gen = new Node;
+        Node* rChild = new Node;
+        Node* lChild = new Node;
+        string val="";
+        switch (input_token) {
+        case t_add:
+        case t_sub:
+                cout << "predict term_tail --> add_op term term_tail\n";
+                val = add_op ();
+                lChild = term ();
+                rChild = term_tail ();
+                gen->value = val;
+                if(lChild != NULL)
+                        gen->child[0]=lChild;
+                if(rChild != NULL)
+                        gen->child[1]=rChild;
+                return gen;
+        case t_id:
+        case t_read:
+        case t_write:
+        case t_if:
+        case t_fi:
+        case t_do:
+        case t_od:
+        case t_check:
+        case t_eq:
+        case t_neq:
+        case t_lthan:
+        case t_gthan:
+        case t_leq:
+        case t_geq:
+        case t_rparen:
+        case t_eof:
+                cout << "predict term_tail --> epsilon\n";
+                return NULL;      /*  epsilon production */
+        default:
+                return NULL;
+        }
+}
+
+Node* term () {
+        Node* lChild = new Node;
+        Node* rChild = new Node;
+        switch (input_token) {
+        case t_id:
+        case t_literal:
+        case t_lparen:
+                cout << "predict term --> factor factor_tail\n";
+                lChild = factor ();
+                rChild = factor_tail ();
+                if(rChild != NULL){
+                  rChild->child[0]=lChild;
+                  return rChild;
+                }
+                return lChild;
+        default:
+                return NULL;
+        }
+}
+
+Node* factor_tail () {
+        Node* gen = new Node;
+        Node* rChild = new Node;
+        Node* lChild = new Node;
+        string val="";
+        switch (input_token) {
+        case t_mul:
+        case t_div:
+                cout << "predict factor_tail --> mul_op factor factor_tail\n";
+                val = mul_op ();
+                lChild = factor ();
+                rChild = factor_tail ();
+                gen->value = val;
+                if(lChild != NULL)
+                        gen->child[0]=lChild;
+                if(rChild != NULL)
+                        gen->child[1]=rChild;
+                return gen;
+        case t_add:
+        case t_sub:
+        case t_rparen:
+        case t_id:
+        case t_read:
+        case t_write:
+        case t_eof:
+        case t_if:
+        case t_fi:
+        case t_do:
+        case t_od:
+        case t_check:
+        case t_eq:
+        case t_neq:
+        case t_lthan:
+        case t_gthan:
+        case t_leq:
+        case t_geq:
+                cout << "predict factor_tail --> epsilon\n";
+                return NULL;      /*  epsilon production */
+                default:
+                        return NULL;
+        }
+}
+
+Node* factor () {
+        Node* gen = new Node;
+        switch (input_token) {
+        case t_id:
+                cout << "predict factor --> id\n";
+                match (t_id);
+                gen->value = prev_token;
+                return gen;
+        case t_literal:
+                cout << "predict factor --> literal\n";
+                match (t_literal);
+                gen->value = prev_token;
+                return gen;
+        case t_lparen:
+                cout << "predict factor --> lparen relation rparen\n";
+                match (t_lparen);
+                gen = relation ();
+                match (t_rparen);
+                return gen;
+        default:
+                return NULL;
+        }
+}
+
+string rel_op() {
+        switch (input_token) {
+        case t_eq:
+                cout << "predict rel_op --> eq\n";
+                match (t_eq);
+                return "==";
+        case t_neq:
+                cout << "predict rel_op --> neq\n";
+                match (t_neq);
+                return "!=";
+        case t_lthan:
+                cout << "predict rel_op --> lthan\n";
+                match (t_lthan);
+                return "<";
+        case t_gthan:
+                cout << "predict rel_op --> gthan\n";
+                match (t_gthan);
+                return ">";
+        case t_leq:
+                cout << "predict rel_op --> leq\n";
+                match (t_leq);
+                return "<=";
+        case t_geq:
+                cout << "predict rel_op --> geq\n";
+                match (t_geq);
+                return ">=";
+        default:
+                return NULL;
+        }
+}
+
+string add_op () {
+        switch (input_token) {
+        case t_add:
+                cout << "predict add_op --> add\n";
+                match (t_add);
+                return "+";
+        case t_sub:
+                cout << "predict add_op --> sub\n";
+                match (t_sub);
+                return "-";
+                default:
+                        return NULL;
+        }
+}
+
+string mul_op () {
+        switch (input_token) {
+        case t_mul:
+                cout << "predict mul_op --> mul\n";
+                match (t_mul);
+                return "*";
+        case t_div:
+                cout << "predict mul_op --> div\n";
+                match (t_div);
+                return "/";
+                default:
+                        return NULL;
+        }
+}
+void printTree(Node* root){
+    if(root == NULL){
+        return;
+    }else{
+        if(root->child[0] != NULL
+            || root->child[1] != NULL
+            || root->child[2] != NULL
+            || root->child[3] != NULL){
+
+            cout << "( " << root->value << " ";
+            printTree(root->child[0]);
+            printTree(root->child[1]);
+            printTree(root->child[2]);
+            printTree(root->child[3]);
+            cout << ") ";
+        }
+        else{
+            cout << " " << root->value << " ";
+        }
+    }
+}
+int main () {
+        input_token = scan ();
+        Node* outputTree = program ();
+        printTree(outputTree);
+        return 0;
+}
