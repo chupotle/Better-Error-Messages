@@ -59,7 +59,21 @@ void program () {
                 stmt_list ();
                 match (t_eof);
                 break;
-        default: error ();
+        default:
+                while (true)
+                {
+                        if (input_token == t_id || input_token == t_read|| input_token == t_write|| input_token == t_if|| input_token == t_do|| input_token == t_check)
+                        {
+                                cout<< "      Your program containing: " << names[input_token] << " is malformed\n";
+                                program();
+                                break;
+                        }
+                        else
+                        {
+                                cout<< "      Your program containing: " << names[input_token] << " is malformed\n";
+                                input_token = scan();
+                        }
+                }
         }
 }
 
@@ -81,7 +95,25 @@ void stmt_list () {
         case t_eof:
                 cout << "predict stmt_list --> epsilon\n";
                 break;      /*  epsilon production */
-        default: error ();
+        default:
+                while (true)
+                {
+                        if (input_token == t_fi || input_token == t_od||input_token == t_read|| input_token == t_write|| input_token == t_if|| input_token == t_do|| input_token == t_check)
+                        {
+                                cout<< "      Your statement list containing: " << names[input_token] << " is malformed\n";
+                                stmt();
+                                break;
+                        }
+                        else if (input_token == t_fi || input_token == t_od || input_token == t_eof)
+                        {
+                                cout<< "      Your statement list containing: " << names[input_token] << " is malformed\n";
+                                break;
+                        }
+                        else
+                        {
+                                input_token = scan();
+                        }
+                }
         }
 }
 
@@ -126,20 +158,18 @@ void stmt () {
                 {
                         if (input_token == t_id || input_token == t_read|| input_token == t_write|| input_token == t_if|| input_token == t_do|| input_token == t_check)
                         {
-                                cout<< "oops";
+                                cout<< "      Your statement containing: " << names[input_token] << " is malformed\n";
                                 stmt();
                                 break;
                         }
                         else if (input_token == t_fi || input_token == t_od || input_token == t_eof)
                         {
-                                cout << "oops2";
+                                cout<< "      Your statement containing: " << names[input_token] << " is malformed\n";
                                 break;
                         }
                         else
                         {
-                          cout<<"1"<<input_token;
                                 input_token = scan();
-                                cout<<input_token<<"2";
                         }
                 }
 
@@ -160,20 +190,18 @@ void relation() {
                 {
                         if (input_token == t_lparen ||  input_token == t_id|| input_token == t_literal)
                         {
-                                cout<< "oops3";
+                                cout<< "      Your relation containing: " << names[input_token] << " is malformed\n";
                                 relation();
                                 break;
                         }
                         else if (input_token == t_fi || input_token == t_od || input_token == t_eof|| input_token == t_rparen)
                         {
-                                cout << "oops4";
+                                cout<< "      Your relation containing: " << names[input_token] << " is malformed\n";
                                 break;
                         }
                         else
                         {
-                          cout<<"1"<<input_token;
                                 input_token = scan();
-                                cout<<input_token<<"2";
                         }
                 }
         }
@@ -193,20 +221,18 @@ void expr () {
                 {
                         if (input_token == t_lparen ||  input_token == t_id|| input_token == t_literal)
                         {
-                                cout<< "oop5";
+                                cout<< "      Your expression containing: " << names[input_token] << " is malformed\n";
                                 expr();
                                 break;
                         }
                         else if (input_token == t_eq || input_token == t_neq || input_token == t_lthan|| input_token == t_gthan|| input_token == t_leq|| input_token == t_geq|| input_token == t_fi|| input_token == t_od|| input_token == t_rparen|| input_token == t_eof)
                         {
-                                cout << "oops6";
+                                cout<< "      Your expression containing: " << names[input_token] << " is malformed\n";
                                 break;
                         }
                         else
                         {
-                          cout<<"1"<<input_token;
                                 input_token = scan();
-                                cout<<input_token<<"2";
                         }
                 }
         }
@@ -236,7 +262,24 @@ void expr_tail() {
         case t_rparen:
                 cout << "predict expr_tail --> epsilon\n";
                 break; /*  epsilon production */
-        default: error ();
+        default:  while (true)
+                {
+                        if (input_token == t_eq ||  input_token == t_neq|| input_token == t_lthan|| input_token == t_gthan|| input_token == t_leq|| input_token == t_geq|| input_token == t_rparen||input_token == t_id || input_token == t_read|| input_token == t_write|| input_token == t_if|| input_token == t_do|| input_token == t_check|| input_token == t_eof)
+                        {
+                                cout<< "      Your expression tail containing: " << names[input_token] << " is malformed\n";
+                                expr_tail();
+                                break;
+                        }
+                        else if (input_token == t_eof || input_token == t_fi || input_token == t_od|| input_token == t_rparen)
+                        {
+                                cout<< "      Your expression tail containing: " << names[input_token] << " is malformed\n";
+                                break;
+                        }
+                        else
+                        {
+                                input_token = scan();
+                        }
+                }
         }
 }
 
@@ -268,7 +311,24 @@ void term_tail () {
         case t_eof:
                 cout << "predict term_tail --> epsilon\n";
                 break;      /*  epsilon production */
-        default: error ();
+        default:   while (true)
+                {
+                        if (input_token == t_add || input_token == t_sub || input_token == t_eq ||  input_token == t_neq|| input_token == t_lthan|| input_token == t_gthan|| input_token == t_leq|| input_token == t_geq|| input_token == t_rparen||input_token == t_id || input_token == t_read|| input_token == t_write|| input_token == t_if|| input_token == t_do|| input_token == t_check|| input_token == t_eof)
+                        {
+                                cout<< "      Your term tail containing: " << names[input_token] << " is malformed\n";
+                                term_tail();
+                                break;
+                        }
+                        else if (input_token == t_eq ||  input_token == t_neq|| input_token == t_lthan|| input_token == t_gthan|| input_token == t_leq|| input_token == t_geq||input_token == t_eof || input_token == t_fi || input_token == t_od|| input_token == t_rparen)
+                        {
+                                cout<< "      Your term tail containing: " << names[input_token] << " is malformed\n";
+                                break;
+                        }
+                        else
+                        {
+                                input_token = scan();
+                        }
+                }
         }
 }
 
@@ -281,7 +341,24 @@ void term () {
                 factor ();
                 factor_tail ();
                 break;
-        default: error ();
+        default:   while (true)
+                {
+                        if ( input_token == t_lparen||input_token == t_id || input_token == t_literal)
+                        {
+                                cout<< "      Your term containing: " << names[input_token] << " is malformed\n";
+                                term();
+                                break;
+                        }
+                        else if (input_token == t_add || input_token == t_sub || input_token == t_eq ||  input_token == t_neq|| input_token == t_lthan|| input_token == t_gthan|| input_token == t_leq|| input_token == t_geq|| input_token == t_rparen||input_token == t_fi || input_token == t_od||input_token == t_eof)
+                        {
+                                cout<< "      Your term containing: " << names[input_token] << " is malformed\n";
+                                break;
+                        }
+                        else
+                        {
+                                input_token = scan();
+                        }
+                }
         }
 }
 
@@ -314,7 +391,24 @@ void factor_tail () {
         case t_geq:
                 cout << "predict factor_tail --> epsilon\n";
                 break;      /*  epsilon production */
-        default: error ();
+        default: while (true)
+                {
+                        if (input_token == t_add || input_token == t_sub || input_token == t_mul || input_token == t_div|| input_token == t_eq ||  input_token == t_neq|| input_token == t_lthan|| input_token == t_gthan|| input_token == t_leq|| input_token == t_geq|| input_token == t_rparen||input_token == t_id || input_token == t_read|| input_token == t_write|| input_token == t_if|| input_token == t_do|| input_token == t_check|| input_token == t_eof)
+                        {
+                                cout<< "      Your factor tail containing: " << names[input_token] << " is malformed\n";
+                                factor_tail();
+                                break;
+                        }
+                        else if (input_token == t_add || input_token == t_sub|| input_token == t_eq ||  input_token == t_neq|| input_token == t_lthan|| input_token == t_gthan|| input_token == t_leq|| input_token == t_geq|| input_token == t_rparen||input_token == t_fi || input_token == t_od||input_token == t_eof)
+                        {
+                                cout<< "      Your factor tail containing: " << names[input_token] << " is malformed\n";
+                                break;
+                        }
+                        else
+                        {
+                                input_token = scan();
+                        }
+                }
         }
 }
 
@@ -334,7 +428,24 @@ void factor () {
                 relation ();
                 match (t_rparen);
                 break;
-        default: error ();
+        default: while (true)
+                {
+                        if (input_token == t_lparen ||  input_token == t_id|| input_token == t_literal)
+                        {
+                                cout<< "      Your factor containing: " << names[input_token] << " is malformed\n";
+                                factor();
+                                break;
+                        }
+                        else if (input_token == t_add || input_token == t_sub || input_token == t_mul || input_token == t_div|| input_token == t_eq ||  input_token == t_neq|| input_token == t_lthan|| input_token == t_gthan|| input_token == t_leq|| input_token == t_geq|| input_token == t_rparen||input_token == t_fi || input_token == t_od|| input_token == t_eof)
+                        {
+                                cout<< "      Your factor containing: " << names[input_token] << " is malformed\n";
+                                break;
+                        }
+                        else
+                        {
+                                input_token = scan();
+                        }
+                }
         }
 }
 
@@ -364,7 +475,19 @@ void rel_op() {
                 cout << "predict rel_op --> geq\n";
                 match (t_geq);
                 break;
-        default: error ();
+        default: while (true)
+                {
+                        if (input_token == t_eq ||  input_token == t_neq|| input_token == t_lthan|| input_token == t_gthan|| input_token == t_leq|| input_token == t_geq)
+                        {
+                                cout<< "      Your relation operator containing: " << names[input_token] << " is malformed\n";
+                                rel_op();
+                                break;
+                        }
+                        else
+                        {
+                                input_token = scan();
+                        }
+                }
         }
 }
 
@@ -378,7 +501,19 @@ void add_op () {
                 cout << "predict add_op --> sub\n";
                 match (t_sub);
                 break;
-        default: error ();
+        default:while (true)
+                {
+                        if (input_token == t_add| input_token == t_sub)
+                        {
+                                cout<< "      Your add operator containing: " << names[input_token] << " is malformed\n";
+                                add_op();
+                                break;
+                        }
+                        else
+                        {
+                                input_token = scan();
+                        }
+                }
         }
 }
 
@@ -392,7 +527,19 @@ void mul_op () {
                 cout << "predict mul_op --> div\n";
                 match (t_div);
                 break;
-        default: error ();
+        default: while (true)
+                {
+                        if (input_token == t_mul| input_token == t_div)
+                        {
+                                cout<< "      Your mul operator containing: " << names[input_token] << " is malformed\n";
+                                mul_op();
+                                break;
+                        }
+                        else
+                        {
+                                input_token = scan();
+                        }
+                }
         }
 }
 
