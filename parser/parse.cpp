@@ -353,9 +353,9 @@ Node* term_tail () {
                 lChild = term ();
                 rChild = term_tail ();
                 gen->value = val;
-                if(lChild != NULL)
+                //if(lChild != NULL)
                         gen->child[0]=lChild;
-                if(rChild != NULL)
+                //if(rChild != NULL)
                         gen->child[1]=rChild;
                 return gen;
         case t_id:
@@ -401,6 +401,7 @@ Node* term_tail () {
 Node* term () {
         Node* lChild = new Node;
         Node* rChild = new Node;
+        Node* gen = new Node;
         switch (input_token) {
         case t_id:
         case t_literal:
@@ -506,8 +507,8 @@ Node* factor () {
         case t_literal:
                 //cout << "predict factor --> literal\n";
                 match (t_literal);
-                    gen->value = prev_token;
-                    return gen;
+                gen->value = prev_token;
+                return gen;
         case t_lparen:
                 //cout << "predict factor --> lparen relation rparen\n";
                 match (t_lparen);
@@ -656,5 +657,6 @@ int main () {
         input_token = scan ();
         Node* outputTree = program ();
         printTree(outputTree);
+        cout << "\n"
         return 0;
 }
