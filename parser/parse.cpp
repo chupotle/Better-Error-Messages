@@ -32,6 +32,7 @@ void error () {
 void match (token expected) {
         if (input_token == expected) {
                 //cout << "matched " << names[input_token];
+                prev_token=token_image;
                 if (input_token == t_id || input_token == t_literal)
                         cout << "";
                 //cout << "\n";
@@ -657,6 +658,6 @@ int main () {
         input_token = scan ();
         Node* outputTree = program ();
         printTree(outputTree);
-        cout << "\n"
+        cout << "\n";
         return 0;
 }
